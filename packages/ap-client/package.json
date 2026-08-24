@@ -12,6 +12,7 @@
     "@qu/as2": "*",
     "@qu/core": "*",
     "@qu/ap-realtime": "*",
+    "@qu/ap-encryption": "*",
     "@qu/reactive": "*"
   },
   "devDependencies": {

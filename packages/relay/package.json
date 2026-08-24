@@ -20,7 +20,9 @@
     "@qu/local-vault": "*"
   },
   "devDependencies": {
-    "@qu/ap-client": "*"
+    "@qu/ap-client": "*",
+    "@qu/ap-groups": "*",
+    "@qu/ap-encryption": "*"
   },
   "scripts": {
     "start": "node src/serve.js",

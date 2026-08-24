@@ -1,0 +1,19 @@
+{
+  "name": "@qu/ap-encryption",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "qu:encryptedPayload (built on @qu/core's X25519/AES-256-GCM primitives) and the sharpened guard rule: encrypted+public and private+unencrypted are both structural errors, not just conventions.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*",
+    "@qu/ap-core": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

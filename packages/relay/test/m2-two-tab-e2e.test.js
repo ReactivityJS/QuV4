@@ -75,6 +75,7 @@ test('M2: object/persistent — a publish on one tab appears live on the other',
       type: 'qu:Setting',
       fields: { value: 'dark' },
       collections: [settings],
+      allowUnencryptedPrivate: true, // M2 tests realtime mechanics; M3 covers encryption
     });
     await sleep(40);
 
@@ -106,6 +107,7 @@ test('M2: offline/reconnect is lossless — a disconnected tab catches up via re
       type: 'qu:Setting',
       fields: { value: 1 },
       collections: [settings],
+      allowUnencryptedPrivate: true,
     });
     await sleep(30);
     assert.equal((await tabB.store.get(`${relay.actor.id}/settings/a`))?.value, 1);
@@ -120,12 +122,14 @@ test('M2: offline/reconnect is lossless — a disconnected tab catches up via re
       type: 'qu:Setting',
       fields: { value: 2 },
       collections: [settings],
+      allowUnencryptedPrivate: true,
     });
     await tabA.client.publish({
       id: `${relay.actor.id}/settings/c`,
       type: 'qu:Setting',
       fields: { value: 3 },
       collections: [settings],
+      allowUnencryptedPrivate: true,
     });
     await sleep(30);
 
@@ -171,6 +175,7 @@ test('M2: ephemeral frames are live-only — never persisted, never replayed on 
       durability: DURABILITY.EPHEMERAL,
       fields: { sdp: 'v=0...' },
       collections: [signals],
+      allowUnencryptedPrivate: true,
     });
     await sleep(30);
     assert.equal(await relay.store.get(`${relay.actor.id}/signals/offer-1`), null);
@@ -209,6 +214,7 @@ test('M2: session frames are live-only — visible to connected peers, never rep
       sessionId: SESSION_ID,
       fields: { line: 42 },
       collections: [cursors],
+      allowUnencryptedPrivate: true,
     });
     await sleep(30);
 

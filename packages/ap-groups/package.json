@@ -1,0 +1,23 @@
+{
+  "name": "@qu/ap-groups",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Group actors and membership (Join/Accept/Leave/Remove) — the one mechanism that covers private chat groups, game groups, and (once per-device identity exists) the personal 'my devices' group alike.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/ap-core": "*"
+  },
+  "devDependencies": {
+    "@qu/core": "*",
+    "@qu/ap-store": "*",
+    "@qu/ap-encryption": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

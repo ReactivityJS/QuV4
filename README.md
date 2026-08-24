@@ -182,15 +182,54 @@ non-root user, a declared `/data` volume, and a `/healthz`-based
   QuServer role: PWA hosting, push routing — Phase 4/5 territory), the
   realtime `hello` handshake's trust-on-claim actor identity (needs real
   session/auth), and client-side auto-reconnect/backoff for `ap-client`.
-- **Deployment infra — done.** 300/300 tests passing (`npm test`).
+- **Deployment infra — done.**
   `packages/relay/src/serve.js` is the first actual runnable entrypoint
   (env-var configured, `FsAdapter`/`FsVaultAdapter`-backed, `/healthz`),
   smoke-tested by spawning it as a real child process
   (`packages/relay/test/serve.test.js`). `Dockerfile` + `docker-compose.yml`
   add a `test` service (full suite in-container) and a `relay` service
   (build + run the deployable image, persistent named volume) — see
-  "Running QuRelay" above.
+  "Running QuRelay" above. `docker compose build` itself could not be
+  verified end-to-end in the environment this was built in (egress to
+  Docker Hub's image CDN was policy-blocked there) — `docker compose
+  config` validates cleanly and the image's `CMD` is verified directly, but
+  the build step itself needs a first real run in a normal environment.
+- **Phase 4 (groups + encryption) — done.** 356/356 tests passing (`npm test`).
+  - `packages/core` — added `crypto.js` (QuCrypto): X25519 keypairs
+    (generated or seed-derived, RFC 8410 DER-wrapped like `ap-core`'s
+    Ed25519 helpers), ECDH, and an AES-256-GCM envelope — one random
+    content key, wrapped individually per recipient.
+  - `packages/ap-groups` — `buildGroupActor()` (a Group is structurally
+    just an Actor), `Join`/`Accept`/`Leave`/`Remove` activity builders
+    (standard AS2 vocabulary, not a `qu:`-namespaced invention),
+    `GroupMembership` (backed by `ap-store`, membership records
+    deliberately namespaced so they can never collide with a member's own
+    cached actor object), and `personalDevicesGroupId()`. **Honestly
+    scoped:** a "device" here is still an identity, not yet a real
+    sub-identity — `packages/identity`'s HD multi-device derivation and
+    the QR-pairing UX the plan describes aren't built. The plan's own risk
+    section explicitly sanctions this as the MVP path.
+  - `packages/ap-encryption` — X25519 Multikey encoding (same
+    did:key-style scheme as identity keys, a different multicodec so the
+    two can never be confused), `encryptPayload()`/`decryptPayload()`
+    (the AS2-shaped `qu:EncryptedPayload` wire form of `crypto.js`), and
+    the sharpened guard: encrypted+public and private+unencrypted are
+    both now structural errors — `assertEncryptionGuard()` throws either
+    way, with one explicit, deliberately inconvenient opt-out.
+  - `packages/ap-client` — `publish()` now enforces the guard on every
+    call: non-public visibility requires `encryptFor` (+ `senderKeypair`)
+    or the explicit `allowUnencryptedPrivate: true`. Addressing (`to`)
+    stays visible for delivery routing even when encrypted — content
+    only, not metadata, exactly like Signal/Matrix.
+  - **Milestone M3, verified with nothing mocked:** group E2EE, including
+    revocation, in `packages/ap-groups/test/group-e2ee.test.js`; and the
+    plan's literal M3 wording — a private setting changed on one device
+    arrives correctly decrypted on another, while the relay's
+    authoritative store *and* the receiving device's local copy both hold
+    only ciphertext — in
+    `packages/relay/test/m3-encrypted-cross-device.test.js`, over a real
+    WebSocket connection to a real relay.
 
-Everything else (`ap-groups`, `ap-encryption`, `ap-signal`, `ap-cms`,
-`identity`, `ui`, apps, ...) is future phase work — see the phase table and
-the "Quniverse" addendum in `docs/rewrite-plan.md`.
+Everything else (`ap-signal`, `ap-cms`, `identity`, `ui`, apps, ...) is
+future phase work — see the phase table and the "Quniverse" addendum in
+`docs/rewrite-plan.md`.
