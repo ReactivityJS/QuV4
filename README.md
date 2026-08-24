@@ -98,12 +98,56 @@ npm test
     `packages/relay/test/federation-e2e.test.js`. That proves the wire
     protocol itself is correct; compatibility with a specific real
     instance's quirks still needs checking after deployment.
+- **Phase 3 (realtime + ap-client) — done.** 299/299 tests passing (`npm test`).
+  - `packages/ap-store` — added `getChildrenSince()` (ascending, cursor-
+    bounded) for `qu:Resume{since}` replay, and `change` events now carry
+    `ts` so a *live* broadcast can also advance a client's cursor, not
+    just an explicit resume.
+  - `packages/ap-realtime` — the one wire envelope, `qu:StreamFrame`
+    (`kind: object|activity|ephemeral|session|control`), covering both
+    data and control frames (`hello`/`subscribe`/`unsubscribe`/`resume`/
+    `resumed`). `WebSocketClientTransport`/`WebSocketServerTransport` (via
+    `ws` — QuV3's own precedent exception to the minimal-deps policy) as
+    the standard transport; `SseClientTransport`/`SseServerTransport` (via
+    `fetch`'s streaming body, not `EventSource`) for restrictive networks,
+    receive-only by nature. `replayResume()` is the shared server-side
+    replay logic both the relay and any future transport reuse.
+  - `packages/relay` — `realtime-bridge.js`: wires `WebSocketServerTransport`
+    onto the *same* HTTP server `ap-router.js` runs on (one QuRelay
+    process, one port). Per-peer `hello`/`subscribe`/`resume` handshake,
+    live broadcast bridged straight off `ap-store`'s shared `QuEvents`
+    bus, and authorization that a peer may only publish under its own
+    actor's collections. **Known simplification:** the `hello` handshake
+    trusts the claimed `actorId` outright — there is no session/auth layer
+    yet; a real deployment must verify this before shipping.
+  - `packages/ap-client` — `publish()`/`watch()`/`watchChildren()`, the one
+    API app authors use for any data class. Writes land in the local
+    `ap-store` immediately (optimistic, offline-safe); `persistent` writes
+    also queue in a durable local outbox (collapsing repeated offline
+    edits to the same id into one entry) until actually handed to the
+    transport; `ephemeral`/`session` writes are best-effort, live-only,
+    never queued. Every connect (or reconnect) always goes hello →
+    subscribe → resume → flush-outbox → live, with the resume cursor
+    itself persisted locally so it survives an app restart, not just a
+    reconnect. **Known simplification:** detecting a drop and reconnecting
+    is the caller's job — this class reacts correctly to reconnection but
+    doesn't loop/backoff on its own yet.
+  - **Milestone M2, verified end-to-end, nothing mocked:**
+    `packages/relay/test/m2-two-tab-e2e.test.js` runs two `ApClient`s
+    (separate local stores, real WebSocket) against one relay, both
+    representing the same actor's own devices ("two tabs"): a live publish
+    on one appears on the other; a tab that goes offline, misses two
+    publishes, and reconnects catches up via resume with no loss and no
+    duplication; ephemeral frames are proven live-only (never persisted,
+    never replayed); session frames are proven visible to connected peers
+    but never replayed to a later joiner.
 - **Known gaps carried forward:** browser storage adapters (IndexedDB/
   localStorage/sessionStorage — Phase 1), HD multi-actor identity
-  (`packages/identity` — not yet a package), and `http-router.js` (the
-  QuServer role: PWA hosting, push routing — Phase 4/5 territory).
+  (`packages/identity` — not yet a package), `http-router.js` (the
+  QuServer role: PWA hosting, push routing — Phase 4/5 territory), the
+  realtime `hello` handshake's trust-on-claim actor identity (needs real
+  session/auth), and client-side auto-reconnect/backoff for `ap-client`.
 
-Everything else (`packages/ap-realtime`, `ap-groups`, `ap-encryption`,
-`ap-signal`, `ap-client`, `ap-cms`, `identity`, `ui`, apps, ...) is future
-phase work — see the phase table and the "Quniverse" addendum in
-`docs/rewrite-plan.md`.
+Everything else (`ap-groups`, `ap-encryption`, `ap-signal`, `ap-cms`,
+`identity`, `ui`, apps, ...) is future phase work — see the phase table and
+the "Quniverse" addendum in `docs/rewrite-plan.md`.

@@ -1,0 +1,23 @@
+{
+  "name": "@qu/ap-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "publish()/watch() — the one API app authors use, for all three data classes identically. Offline-first: writes go to the local ap-store immediately, then flow out over ap-realtime when connected; reconnect always resumes before trusting the live stream.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*",
+    "@qu/ap-realtime": "*",
+    "@qu/reactive": "*"
+  },
+  "devDependencies": {
+    "@qu/ap-store": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

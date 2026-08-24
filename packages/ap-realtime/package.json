@@ -1,0 +1,22 @@
+{
+  "name": "@qu/ap-realtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The realtime channel: one qu:StreamFrame wire envelope (kind: object|activity|ephemeral|session|control) for everything, WebSocket + SSE transports, and the qu:Resume{since} reconnect replay.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@qu/ap-store": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

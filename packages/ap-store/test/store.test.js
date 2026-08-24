@@ -97,6 +97,66 @@ test('getChildren does not collide between collections whose ids share a prefix'
   );
 });
 
+test('getChildrenSince with no cursor returns everything, oldest first', async () => {
+  const store = makeStore();
+  const outbox = 'https://relay.example/actors/alice/outbox';
+  await store.put({ id: 'https://relay.example/1' }, { collections: [outbox], ts: 1000 });
+  await store.put({ id: 'https://relay.example/2' }, { collections: [outbox], ts: 2000 });
+
+  const results = await store.getChildrenSince(outbox);
+  assert.deepEqual(
+    results.map((r) => r.doc.id),
+    ['https://relay.example/1', 'https://relay.example/2'],
+  );
+});
+
+test('getChildrenSince only returns entries strictly after the given cursor', async () => {
+  const store = makeStore();
+  const outbox = 'https://relay.example/actors/alice/outbox';
+  await store.put({ id: 'https://relay.example/1' }, { collections: [outbox], ts: 1000 });
+  const midpoint = (await store.getChildrenSince(outbox))[0].cursor;
+  await store.put({ id: 'https://relay.example/2' }, { collections: [outbox], ts: 2000 });
+  await store.put({ id: 'https://relay.example/3' }, { collections: [outbox], ts: 3000 });
+
+  const results = await store.getChildrenSince(outbox, midpoint);
+  assert.deepEqual(
+    results.map((r) => r.doc.id),
+    ['https://relay.example/2', 'https://relay.example/3'],
+  );
+});
+
+test('getChildrenSince resuming from the latest cursor returns nothing new', async () => {
+  const store = makeStore();
+  const outbox = 'https://relay.example/actors/alice/outbox';
+  await store.put({ id: 'https://relay.example/1' }, { collections: [outbox], ts: 1000 });
+  const results1 = await store.getChildrenSince(outbox);
+  const latest = results1.at(-1).cursor;
+  assert.deepEqual(await store.getChildrenSince(outbox, latest), []);
+});
+
+test('getChildrenSince respects limit and returns a resumable cursor for the next page', async () => {
+  const store = makeStore();
+  const outbox = 'https://relay.example/actors/alice/outbox';
+  for (let i = 0; i < 5; i += 1) {
+    await store.put({ id: `https://relay.example/${i}` }, { collections: [outbox], ts: i });
+  }
+  const page1 = await store.getChildrenSince(outbox, null, { limit: 2 });
+  assert.deepEqual(page1.map((r) => r.doc.id), ['https://relay.example/0', 'https://relay.example/1']);
+
+  const page2 = await store.getChildrenSince(outbox, page1.at(-1).cursor, { limit: 2 });
+  assert.deepEqual(page2.map((r) => r.doc.id), ['https://relay.example/2', 'https://relay.example/3']);
+});
+
+test('getChildrenSince does not collide between collections whose ids share a prefix', async () => {
+  const store = makeStore();
+  const a = 'https://relay.example/actors/alice/outbox';
+  const b = 'https://relay.example/actors/alice/outbox2';
+  await store.put({ id: 'https://relay.example/1' }, { collections: [a], ts: 1 });
+  await store.put({ id: 'https://relay.example/2' }, { collections: [b], ts: 2 });
+
+  assert.deepEqual((await store.getChildrenSince(a)).map((r) => r.doc.id), ['https://relay.example/1']);
+});
+
 test('a doc can be indexed under multiple collections at once', async () => {
   const store = makeStore();
   const outbox = 'https://relay.example/actors/alice/outbox';

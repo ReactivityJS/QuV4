@@ -104,7 +104,7 @@ export class ApStore {
           doc.id,
         );
       }
-      this.#events.emit('change', { id: doc.id, doc, durability, collections, sessionId });
+      this.#events.emit('change', { id: doc.id, doc, durability, collections, sessionId, ts });
       return doc;
     }
 
@@ -123,7 +123,7 @@ export class ApStore {
     for (const collectionId of collections) {
       await this.#adapter.put(indexKey(collectionId, ts, doc.id), doc.id);
     }
-    this.#events.emit('change', { id: doc.id, doc, durability, collections });
+    this.#events.emit('change', { id: doc.id, doc, durability, collections, ts });
     return doc;
   }
 
@@ -169,6 +169,34 @@ export class ApStore {
     return docs;
   }
 
+  /**
+   * List persisted members of a collection *ascending*, strictly after
+   * `sinceCursor` (or from the start, if omitted/null) — the read behind
+   * `qu:Resume{since}`: a reconnecting client replays exactly what it
+   * missed, oldest first, each entry carrying the cursor to resume from
+   * next time.
+   *
+   * @param {string} collectionId
+   * @param {string|null} [sinceCursor] - a cursor previously returned here, or null for "from the beginning"
+   * @param {object} [options]
+   * @param {number} [options.limit] - max entries to return, default 100
+   * @returns {Promise<{ cursor: string, doc: object }[]>}
+   */
+  async getChildrenSince(collectionId, sinceCursor = null, { limit = 100 } = {}) {
+    const prefix = indexKeyPrefix(collectionId);
+    const entries = await this.#adapter.list({ prefix, reverse: false, limit: Infinity });
+    const sinceKey = sinceCursor ? `${prefix}${sinceCursor}` : null;
+    const after = sinceKey ? entries.filter((entry) => entry.key > sinceKey) : entries;
+    const limited = Number.isFinite(limit) ? after.slice(0, limit) : after;
+
+    const results = [];
+    for (const entry of limited) {
+      const doc = await this.get(entry.value);
+      if (doc) results.push({ cursor: entry.key.slice(prefix.length), doc });
+    }
+    return results;
+  }
+
   /** Session-scoped children (durability: 'session') — volatile, in-memory only. */
   async getSessionChildren(sessionId, collectionId, { limit = 50 } = {}) {
     const entries = await this.#volatile.list({
@@ -191,8 +219,11 @@ export class ApStore {
 
   /**
    * Subscribe to change notifications: `({ id, doc, durability, collections,
-   * sessionId? }) => void`. `doc` is null on delete. Returns an unsubscribe
-   * function.
+   * sessionId?, ts? }) => void`. `doc` is null on delete. `ts` is omitted
+   * for ephemeral and for delete (no cursor semantics apply); present for
+   * persistent/session puts, matching the cursor getChildrenSince() would
+   * hand back for the same entry — see @qu/ap-realtime's frame builders.
+   * Returns an unsubscribe function.
    */
   onChange(callback) {
     return this.#events.on('change', callback);
