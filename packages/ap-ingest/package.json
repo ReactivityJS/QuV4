@@ -1,0 +1,22 @@
+{
+  "name": "@qu/ap-ingest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The verify -> authorize -> side-effect -> persist -> notify pipeline for incoming AP activities (applies to Class B and Class C alike).",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*",
+    "@qu/ap-core": "*"
+  },
+  "devDependencies": {
+    "@qu/ap-store": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

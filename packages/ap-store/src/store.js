@@ -109,6 +109,16 @@ export class ApStore {
     }
 
     // persistent
+    // Re-putting an id that's already stored (an Update activity, or a
+    // queue-style put-to-mutate) must replace its old index entries, not
+    // accumulate a second one alongside them — otherwise getChildren()
+    // would return the same id twice, once per stale entry.
+    const existing = await this.#adapter.get(objectKey(doc.id));
+    if (existing) {
+      for (const collectionId of existing.collections ?? []) {
+        await this.#adapter.delete(indexKey(collectionId, existing.ts, doc.id));
+      }
+    }
     await this.#adapter.put(objectKey(doc.id), { ts, doc, collections });
     for (const collectionId of collections) {
       await this.#adapter.put(indexKey(collectionId, ts, doc.id), doc.id);

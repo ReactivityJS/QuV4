@@ -1,0 +1,25 @@
+{
+  "name": "@qu/relay",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "QuRelay's AP-server role: ap-router.js (WebFinger, NodeInfo, Actor, Inbox, Outbox, Followers/Following) over node:http, plus a single-actor bootstrap helper. The QuServer role (http-router.js — PWA hosting, push routing) is future work.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*",
+    "@qu/ap-core": "*",
+    "@qu/ap-ingest": "*",
+    "@qu/ap-delivery": "*",
+    "@qu/local-vault": "*"
+  },
+  "devDependencies": {
+    "@qu/ap-store": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

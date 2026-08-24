@@ -116,6 +116,30 @@ test('delete removes a doc from every collection it was indexed under', async ()
   assert.deepEqual(await store.getChildren(outbox), []);
 });
 
+test('re-putting the same id under the same collection replaces, not duplicates, its index entry', async () => {
+  const store = makeStore();
+  const outbox = 'https://relay.example/actors/alice/outbox';
+  const doc = { id: 'https://relay.example/1', attempts: 0 };
+  await store.put(doc, { collections: [outbox], ts: 1000 });
+  await store.put({ ...doc, attempts: 1 }, { collections: [outbox], ts: 2000 });
+
+  const children = await store.getChildren(outbox);
+  assert.equal(children.length, 1);
+  assert.equal(children[0].attempts, 1);
+});
+
+test('re-putting with a different collection set moves the id, not adds to it', async () => {
+  const store = makeStore();
+  const a = 'https://relay.example/collections/a';
+  const b = 'https://relay.example/collections/b';
+  const doc = { id: 'https://relay.example/1' };
+  await store.put(doc, { collections: [a], ts: 1000 });
+  await store.put(doc, { collections: [b], ts: 2000 });
+
+  assert.deepEqual(await store.getChildren(a), []);
+  assert.equal((await store.getChildren(b)).length, 1);
+});
+
 test('onChange fires on put with the doc and durability', async () => {
   const store = makeStore();
   const events = [];

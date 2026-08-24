@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { signRequest, verifyRequest } from '../src/http-signature.js';
+import { signRequest, verifyRequest, extractKeyId } from '../src/http-signature.js';
 import { generateRsaTransportKeypair } from '../src/multikey.js';
 
 const KEY_ID = 'https://relay.example/actors/alice#transport-key';
@@ -62,6 +62,22 @@ test('verifyRequest returns false when there is no Signature header', () => {
     verifyRequest({ method: 'GET', url: 'https://target.example/inbox', headers: {}, publicKey }),
     false,
   );
+});
+
+test('extractKeyId reads keyId out of a signed request without verifying', () => {
+  const { privateKey } = generateRsaTransportKeypair();
+  const headers = signRequest({
+    method: 'GET',
+    url: 'https://target.example/inbox',
+    keyId: KEY_ID,
+    privateKey,
+  });
+  assert.equal(extractKeyId(headers.signature), KEY_ID);
+});
+
+test('extractKeyId returns null for missing/malformed input', () => {
+  assert.equal(extractKeyId(undefined), null);
+  assert.equal(extractKeyId('garbage'), null);
 });
 
 test('verifyRequest returns false for a malformed Signature header', () => {

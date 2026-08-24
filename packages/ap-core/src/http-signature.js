@@ -137,4 +137,15 @@ export function verifyRequest({ method, url, headers, body, publicKey }) {
   );
 }
 
+/**
+ * Extract just the `keyId` from a raw Signature header value, without
+ * verifying anything. Callers (ap-ingest) need this first, to know whose
+ * public key to fetch before verifyRequest() can check the signature.
+ */
+export function extractKeyId(signatureHeader) {
+  if (typeof signatureHeader !== 'string') return null;
+  const match = /keyId="([^"]*)"/.exec(signatureHeader);
+  return match ? match[1] : null;
+}
+
 export { DEFAULT_SIGNED_HEADERS };

@@ -2,6 +2,7 @@ export * from './base58.js';
 export * from './multikey.js';
 export * from './actor.js';
 export * from './webfinger.js';
+export * from './resolve.js';
 export * from './nodeinfo.js';
 export * from './http-signature.js';
 export * from './signed-fetch.js';

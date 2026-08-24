@@ -1,0 +1,23 @@
+{
+  "name": "@qu/ap-delivery",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Audience -> inbox resolution and the persistent-tier delivery retry queue (offline-first outbox), backed by ap-store.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/ap-core": "*"
+  },
+  "devDependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*",
+    "@qu/ap-store": "*",
+    "@qu/runtime": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

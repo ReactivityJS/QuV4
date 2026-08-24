@@ -61,7 +61,49 @@ npm test
     This is the stable API `packages/ui`'s QuComponents will sit on once
     that package exists.
 
-Everything else (`packages/ap-ingest`, `ap-delivery`, `ap-realtime`,
-`ap-groups`, `ap-encryption`, `ap-signal`, `ap-client`, `ap-cms`, `relay`,
-`ui`, apps, ...) is future phase work — see the phase table and the
-"Quniverse" addendum in `docs/rewrite-plan.md`.
+- **Phase 2 (server side) — done.** 222/222 tests passing (`npm test`).
+  - `packages/ap-core` — added `resolveWebFinger()`/`fetchActor()`/
+    `resolveActorPublicKey()` (the network-side resolution ap-ingest and
+    ap-delivery need) and `extractKeyId()`.
+  - `packages/ap-ingest` — the verify → authorize → side-effect → persist →
+    notify pipeline (`ingestActivity()`), applying equally to Class B and
+    Class C. HTTP-Signature-verified against the sender's fetched key,
+    same-origin authorization (an activity's `actor` must match who
+    signed it), persisted via `ap-store`. Every step is bracketed by a
+    QuEvents hook (`beforeVerify`/`afterVerify`/`beforeAuthorize`/
+    `afterAuthorize`/`beforeSideEffect`/`afterPersist`/`beforeNotify`) on
+    the *same* shared bus `ap-store` itself emits `change` on — one event
+    bus, not one per package.
+  - `packages/ap-delivery` — `resolveInboxes()` (sharedInbox-deduped),
+    `deliverActivity()` (signed POST), and `DeliveryQueue`: the
+    persistent-tier retry queue backed by `ap-store`, with exponential
+    backoff and a proven-durable restart (a queued entry survives a fresh
+    `ApStore`/`FsAdapter` pair pointed at the same directory). This is the
+    server-side half of the offline-first outbox.
+  - `packages/relay` — `ap-router.js`: the AP-server routes (WebFinger,
+    NodeInfo, Actor, Inbox, sharedInbox, Outbox/Followers/Following) on
+    plain `node:http`, no framework — extensibility comes entirely from
+    the shared QuEvents hooks, not a second plugin mechanism. Plus
+    `ensureLocalActor()` (single-actor-per-vault bootstrap; full HD
+    multi-actor identity is still future `packages/identity` work) and
+    `wireAutoAcceptFollows()`, a worked example of hook-based policy
+    (auto-Accept is opt-in, not built into `ap-ingest`).
+  - **Milestone M1 verification, honestly scoped:** this environment has
+    no network access to a live Mastodon instance, so M1 couldn't be
+    checked against one directly. What *is* verified, end-to-end, with
+    nothing mocked: two fully independent, fully-wired relay processes
+    (own store, own actor, own HTTP server) federate over real HTTP —
+    WebFinger discovery, RSA HTTP-Signature-signed delivery, verified
+    ingest, and an auto-generated `Accept` delivered back — see
+    `packages/relay/test/federation-e2e.test.js`. That proves the wire
+    protocol itself is correct; compatibility with a specific real
+    instance's quirks still needs checking after deployment.
+- **Known gaps carried forward:** browser storage adapters (IndexedDB/
+  localStorage/sessionStorage — Phase 1), HD multi-actor identity
+  (`packages/identity` — not yet a package), and `http-router.js` (the
+  QuServer role: PWA hosting, push routing — Phase 4/5 territory).
+
+Everything else (`packages/ap-realtime`, `ap-groups`, `ap-encryption`,
+`ap-signal`, `ap-client`, `ap-cms`, `identity`, `ui`, apps, ...) is future
+phase work — see the phase table and the "Quniverse" addendum in
+`docs/rewrite-plan.md`.
