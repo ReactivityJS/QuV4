@@ -1,0 +1,14 @@
+{
+  "name": "@qu/local-vault",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "KV store for the raw identity seed and the RSA transport keypair, physically separated from any sync/delivery code path.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

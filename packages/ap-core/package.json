@@ -1,0 +1,17 @@
+{
+  "name": "@qu/ap-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Multikey identity, Actor/WebFinger/NodeInfo building, HTTP Signatures, signed fetch, Collection serialization.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "quv4",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Qu — ActivityPub-native rewrite. See docs/rewrite-plan.md.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test packages/*/test/*.test.js"
+  }
+}
