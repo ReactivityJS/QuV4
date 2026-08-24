@@ -1,0 +1,18 @@
+{
+  "name": "@qu/reactive",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "watch()/watchChildren() built directly against ap-store's onChange()/getChildren() — always re-reads through the full pipeline on change, never trusts the raw event payload. Stable public API for packages/ui's QuComponents.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "devDependencies": {
+    "@qu/ap-store": "*",
+    "@qu/core": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

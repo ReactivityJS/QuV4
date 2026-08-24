@@ -1,0 +1,14 @@
+{
+  "name": "@qu/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "QuEvents (the sole internal event bus) and the generic ordered-KV adapter interface (memory + volatile/TTL) shared by ap-store and its backing storage.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

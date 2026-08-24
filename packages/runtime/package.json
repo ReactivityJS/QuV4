@@ -1,0 +1,14 @@
+{
+  "name": "@qu/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Storage adapters shared across environments — Node Fs today, browser IndexedDB/localStorage/sessionStorage to follow when apps/shell work begins.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

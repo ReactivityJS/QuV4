@@ -1,0 +1,21 @@
+{
+  "name": "@qu/ap-store",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AS2 object store for data classes B and C — get()/put()/getChildren()/onChange() as the single storage API in the system.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@qu/as2": "*",
+    "@qu/core": "*"
+  },
+  "devDependencies": {
+    "@qu/runtime": "*"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
