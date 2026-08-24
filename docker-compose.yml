@@ -1,0 +1,32 @@
+services:
+  # Run the full test suite inside a container: `docker compose run --rm test`.
+  # Same environment CI/deploy would build from, so a green run here means
+  # the image is actually buildable and testable, not just "builds".
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    command: ["npm", "test"]
+
+  # The deployable QuRelay: `docker compose up -d relay`.
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports:
+      - "${QU_PUBLISHED_PORT:-3000}:3000"
+    environment:
+      # QU_HOST must be the public hostname a TLS-terminating reverse
+      # proxy in front of this container answers as — AS2 actor ids are
+      # always https://, even though this process itself only speaks
+      # plain HTTP. Defaults to a local-dev-only value.
+      QU_HOST: ${QU_HOST:-localhost:3000}
+      QU_USERNAME: ${QU_USERNAME:-admin}
+    volumes:
+      - relay-data:/data
+    restart: unless-stopped
+
+volumes:
+  relay-data:

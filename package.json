@@ -11,6 +11,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test packages/*/test/*.test.js"
+    "test": "node --test packages/*/test/*.test.js",
+    "start": "npm run start --workspace=@qu/relay"
   }
 }

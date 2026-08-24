@@ -15,13 +15,15 @@
     "@qu/ap-ingest": "*",
     "@qu/ap-delivery": "*",
     "@qu/ap-realtime": "*",
+    "@qu/ap-store": "*",
+    "@qu/runtime": "*",
     "@qu/local-vault": "*"
   },
   "devDependencies": {
-    "@qu/ap-store": "*",
     "@qu/ap-client": "*"
   },
   "scripts": {
+    "start": "node src/serve.js",
     "test": "node --test test/"
   }
 }

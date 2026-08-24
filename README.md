@@ -31,6 +31,41 @@ npm install
 npm test
 ```
 
+## Running QuRelay
+
+`packages/relay/src/serve.js` is the actual runnable process: one HTTP
+server playing both QuRelay roles at once (AP-server routes + the
+realtime bridge), backed by `FsAdapter`/`FsVaultAdapter` for durable
+storage. Configuration is via environment variables:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `QU_HOST` | `localhost` | Public hostname baked into actor/AS2 ids — must be the hostname a TLS-terminating reverse proxy in front of this process answers as, even though the process itself only ever speaks plain HTTP. |
+| `QU_PORT` | `3000` | Listen port. |
+| `QU_USERNAME` | `admin` | The one local actor this process bootstraps (single-actor-per-vault — see "Known gaps"). |
+| `QU_DATA_DIR` | `./data` | Where the identity vault and the AS2 object store persist to. |
+
+```
+npm start                                    # runs packages/relay/src/serve.js locally
+curl http://localhost:3000/healthz           # -> ok
+```
+
+### Docker / Docker Compose
+
+```
+docker compose run --rm test    # run the full suite inside a container
+docker compose up -d relay      # build + run the deployable image
+docker compose logs -f relay
+```
+
+`relay`'s data directory is a named volume (`relay-data`), so identity and
+storage persist across container restarts. Override `QU_HOST`/
+`QU_USERNAME`/the published port via a `.env` file or shell environment
+before `docker compose up` — see `docker-compose.yml`. The `Dockerfile` has
+no build/compile stage (plain ESM, no bundler) — it's just `npm ci` plus a
+non-root user, a declared `/data` volume, and a `/healthz`-based
+`HEALTHCHECK`.
+
 ## Status log
 
 - **Phase 0 (foundation) — done.**
@@ -147,6 +182,14 @@ npm test
   QuServer role: PWA hosting, push routing — Phase 4/5 territory), the
   realtime `hello` handshake's trust-on-claim actor identity (needs real
   session/auth), and client-side auto-reconnect/backoff for `ap-client`.
+- **Deployment infra — done.** 300/300 tests passing (`npm test`).
+  `packages/relay/src/serve.js` is the first actual runnable entrypoint
+  (env-var configured, `FsAdapter`/`FsVaultAdapter`-backed, `/healthz`),
+  smoke-tested by spawning it as a real child process
+  (`packages/relay/test/serve.test.js`). `Dockerfile` + `docker-compose.yml`
+  add a `test` service (full suite in-container) and a `relay` service
+  (build + run the deployable image, persistent named volume) — see
+  "Running QuRelay" above.
 
 Everything else (`ap-groups`, `ap-encryption`, `ap-signal`, `ap-cms`,
 `identity`, `ui`, apps, ...) is future phase work — see the phase table and
